@@ -1,0 +1,37 @@
+const express = require('express');
+const axios = require('axios');
+const app = express();
+
+// Função para pegar o preço da Binance
+async function getBinancePrice(symbol) {
+  const url = `https://api.binance.com/api/v3/ticker/price?symbol=${symbol}`;
+  const response = await axios.get(url);
+  return response.data.price;
+}
+
+// Função para pegar o preço da KuCoin
+async function getKuCoinPrice(symbol) {
+  const url = `https://api.kucoin.com/api/v1/market/orderbook/level1?symbol=${symbol}`;
+  const response = await axios.get(url);
+  return response.data.data.price;
+}
+
+// Endpoint para pegar os preços de BTC nas duas corretoras
+app.get('/api/get-prices', async (req, res) => {
+  try {
+    const binancePrice = await getBinancePrice('BTCUSDT');
+    const kuCoinPrice = await getKuCoinPrice('BTC-USDT');
+
+    res.json({
+      binancePrice,
+      kuCoinPrice,
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).send('Erro ao obter preços');
+  }
+});
+
+app.listen(3000, () => {
+  console.log('Servidor rodando na porta 3000');
+});
