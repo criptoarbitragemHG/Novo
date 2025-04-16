@@ -1,0 +1,17 @@
+const axios = require('axios');
+
+// Função para pegar o preço de uma moeda na Binance
+async function getBinancePrice(symbol) {
+  const url = `https://api.binance.com/api/v3/ticker/price?symbol=${symbol}`;
+  try {
+    const response = await axios.get(url);
+    return response.data.price;
+  } catch (error) {
+    console.error('Erro ao pegar preço da Binance:', error);
+    return null;
+  }
+}
+
+getBinancePrice('BTCUSDT').then(price => {
+  console.log(`Preço do BTC na Binance: ${price}`);
+});
