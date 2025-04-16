@@ -1,0 +1,21 @@
+<script>
+  async function fetchPrices() {
+    try {
+      const response = await fetch('/api/get-prices');
+      const data = await response.json();
+
+      const binancePrice = parseFloat(data.binancePrice);
+      const kuCoinPrice = parseFloat(data.kuCoinPrice);
+
+      document.getElementById('price1').value = binancePrice;
+      document.getElementById('price2').value = kuCoinPrice;
+
+      calculateProfit(); // Atualiza os cálculos
+    } catch (error) {
+      console.error('Erro ao buscar preços:', error);
+    }
+  }
+
+  // Chama a função de obter preços quando a página carregar
+  window.onload = fetchPrices;
+</script>
