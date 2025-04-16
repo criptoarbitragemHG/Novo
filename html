@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Painel de Arbitragem</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 0; padding: 0; }
+    .container { width: 100%; max-width: 600px; margin: 50px auto; padding: 20px; border: 1px solid #ccc; border-radius: 10px; background-color: #f9f9f9; }
+    h1 { text-align: center; }
+    label { display: block; margin: 10px 0 5px; }
+    input[type="number"] { width: 100%; padding: 10px; margin-bottom: 10px; border: 1px solid #ccc; border-radius: 5px; }
+    .result { margin-top: 20px; }
+    .result p { font-size: 18px; }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <h1>Painel de Arbitragem</h1>
+    
+    <label for="amount">Valor da operação (BTC)</label>
+    <input type="number" id="amount" placeholder="Digite o valor em BTC" step="any">
+
+    <label for="price1">Preço de Compra (Corretora 1)</label>
+    <input type="number" id="price1" placeholder="Preço de compra na Corretora 1" step="any">
+
+    <label for="price2">Preço de Venda (Corretora 2)</label>
+    <input type="number" id="price2" placeholder="Preço de venda na Corretora 2" step="any">
+
+    <div class="result">
+      <p id="profit">Lucro: --</p>
+      <p id="percent">Lucro Percentual: --</p>
+    </div>
+  </div>
+
+  <script>
+    const amountInput = document.getElementById('amount');
+    const price1Input = document.getElementById('price1');
+    const price2Input = document.getElementById('price2');
+    const profitText = document.getElementById('profit');
+    const percentText = document.getElementById('percent');
+
+    function calculateProfit() {
+      const amount = parseFloat(amountInput.value);
+      const price1 = parseFloat(price1Input.value);
+      const price2 = parseFloat(price2Input.value);
+
+      if (isNaN(amount) || isNaN(price1) || isNaN(price2)) {
+        return;
+      }
+
+      const profit = (price2 - price1) * amount;
+      const percent = ((price2 - price1) / price1) * 100;
+
+      profitText.textContent = `Lucro: $${profit.toFixed(2)}`;
+      percentText.textContent = `Lucro Percentual: ${percent.toFixed(2)}%`;
+    }
+
+    amountInput.addEventListener('input', calculateProfit);
+    price1Input.addEventListener('input', calculateProfit);
+    price2Input.addEventListener('input', calculateProfit);
+  </script>
+
+</body>
+</html>
