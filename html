@@ -9,7 +9,7 @@
     .container { width: 100%; max-width: 600px; margin: 50px auto; padding: 20px; border: 1px solid #ccc; border-radius: 10px; background-color: #f9f9f9; }
     h1 { text-align: center; }
     label { display: block; margin: 10px 0 5px; }
-    input[type="number"] { width: 100%; padding: 10px; margin-bottom: 10px; border: 1px solid #ccc; border-radius: 5px; }
+    input[type="number"], input[type="text"], select { width: 100%; padding: 10px; margin-bottom: 10px; border: 1px solid #ccc; border-radius: 5px; }
     .result { margin-top: 20px; }
     .result p { font-size: 18px; }
     .no-opportunity { color: red; font-size: 18px; }
@@ -23,16 +23,54 @@
     <label for="amount">Valor da operação (BTC)</label>
     <input type="number" id="amount" placeholder="Digite o valor em BTC" step="any">
 
+    <label for="coin">Escolha a moeda</label>
+    <select id="coin">
+      <option value="BTC">BTC</option>
+      <option value="ETH">ETH</option>
+      <!-- Adicione mais opções conforme necessário -->
+    </select>
+
+    <label for="exchange1">Corretora 1</label>
+    <select id="exchange1">
+      <option value="KuCoin">KuCoin</option>
+      <option value="Binance">Binance</option>
+      <option value="Mercado Bitcoin">Mercado Bitcoin</option>
+      <option value="Foxbit">Foxbit</option>
+      <option value="Mexc">Mexc</option>
+    </select>
+
     <label for="price1">Preço de Compra (Corretora 1)</label>
     <input type="number" id="price1" placeholder="Preço de compra na Corretora 1" step="any">
+
+    <label for="exchange2">Corretora 2</label>
+    <select id="exchange2">
+      <option value="KuCoin">KuCoin</option>
+      <option value="Binance">Binance</option>
+      <option value="Mercado Bitcoin">Mercado Bitcoin</option>
+      <option value="Foxbit">Foxbit</option>
+      <option value="Mexc">Mexc</option>
+    </select>
 
     <label for="price2">Preço de Venda (Corretora 2)</label>
     <input type="number" id="price2" placeholder="Preço de venda na Corretora 2" step="any">
 
+    <label for="network1">Rede de Saque (Corretora 1)</label>
+    <input type="text" id="network1" placeholder="Rede de saque da Corretora 1" readonly>
+
+    <label for="network2">Rede de Saque (Corretora 2)</label>
+    <input type="text" id="network2" placeholder="Rede de saque da Corretora 2" readonly>
+
+    <label for="fee1">Taxa de Saque (Corretora 1, em %)</label>
+    <input type="number" id="fee1" placeholder="Taxa de saque da Corretora 1" step="any">
+
+    <label for="fee2">Taxa de Saque (Corretora 2, em %)</label>
+    <input type="number" id="fee2" placeholder="Taxa de saque da Corretora 2" step="any">
+
     <div class="result">
       <p id="profit">Lucro: --</p>
       <p id="percent">Lucro Percentual: --</p>
-      <p id="noOpportunity" class="no-opportunity" style="display:none;">Não há oportunidade acima de 2%.</p>
+      <p id="withdrawalAmount">Valor do Saque: --</p>
+      <p id="noOpportunity" class="no-opportunity" style="display:none;">Não há oportunidade acima de 2% ou com redes diferentes.</p>
     </div>
   </div>
 
@@ -40,38 +78,82 @@
     const amountInput = document.getElementById('amount');
     const price1Input = document.getElementById('price1');
     const price2Input = document.getElementById('price2');
+    const network1Input = document.getElementById('network1');
+    const network2Input = document.getElementById('network2');
+    const fee1Input = document.getElementById('fee1');
+    const fee2Input = document.getElementById('fee2');
     const profitText = document.getElementById('profit');
     const percentText = document.getElementById('percent');
+    const withdrawalText = document.getElementById('withdrawalAmount');
     const noOpportunityText = document.getElementById('noOpportunity');
+
+    const exchangeSelect1 = document.getElementById('exchange1');
+    const exchangeSelect2 = document.getElementById('exchange2');
+
+    function getNetworkOfCoin(coin, exchange) {
+      // Aqui você pode fazer as chamadas às APIs das corretoras para obter a rede de saque
+      // Exemplo fictício:
+      if (exchange === "KuCoin" || exchange === "Binance") {
+        return "ERC-20"; // Supondo que ambas usem ERC-20 para BTC
+      } else if (exchange === "Mercado Bitcoin") {
+        return "BTC"; // Mercado Bitcoin usa a rede BTC
+      } else if (exchange === "Foxbit" || exchange === "Mexc") {
+        return "BTC"; // Foxbit e Mexc usam a rede BTC
+      }
+      return "Desconhecida";
+    }
 
     function calculateProfit() {
       const amount = parseFloat(amountInput.value);
       const price1 = parseFloat(price1Input.value);
       const price2 = parseFloat(price2Input.value);
+      const fee1 = parseFloat(fee1Input.value) / 100;
+      const fee2 = parseFloat(fee2Input.value) / 100;
 
-      if (isNaN(amount) || isNaN(price1) || isNaN(price2)) {
+      if (isNaN(amount) || isNaN(price1) || isNaN(price2) || isNaN(fee1) || isNaN(fee2)) {
         return;
+      }
+
+      const network1 = getNetworkOfCoin("BTC", exchangeSelect1.value);
+      const network2 = getNetworkOfCoin("BTC", exchangeSelect2.value);
+
+      network1Input.value = network1;
+      network2Input.value = network2;
+
+      if (network1 !== network2) {
+        noOpportunityText.style.display = "block";
+        profitText.textContent = `Lucro: --`;
+        percentText.textContent = `Lucro Percentual: --`;
+        withdrawalText.textContent = `Valor do Saque: --`;
+        return;
+      } else {
+        noOpportunityText.style.display = "none";
       }
 
       const profit = (price2 - price1) * amount;
       const percent = ((price2 - price1) / price1) * 100;
 
       if (percent > 2) {
+        const withdrawal = amount + profit - (amount * fee1) - (amount * fee2);
         profitText.textContent = `Lucro: $${profit.toFixed(2)}`;
         percentText.textContent = `Lucro Percentual: ${percent.toFixed(2)}%`;
-        noOpportunityText.style.display = "none"; // Esconde a mensagem de "sem oportunidade"
+        withdrawalText.textContent = `Valor do Saque: $${withdrawal.toFixed(2)}`;
       } else {
         profitText.textContent = `Lucro: --`;
         percentText.textContent = `Lucro Percentual: --`;
-        noOpportunityText.style.display = "block"; // Exibe a mensagem de "sem oportunidade"
+        withdrawalText.textContent = `Valor do Saque: --`;
+        noOpportunityText.style.display = "block";
       }
     }
 
     amountInput.addEventListener('input', calculateProfit);
     price1Input.addEventListener('input', calculateProfit);
     price2Input.addEventListener('input', calculateProfit);
+    fee1Input.addEventListener('input', calculateProfit);
+    fee2Input.addEventListener('input', calculateProfit);
+    exchangeSelect1.addEventListener('change', calculateProfit);
+    exchangeSelect2.addEventListener('change', calculateProfit);
   </script>
 
 </body>
 </html>
-p
